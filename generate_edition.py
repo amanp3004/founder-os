@@ -1,5 +1,5 @@
 """
-Founder OS — Daily Edition Generator
+Catalyst — Daily Edition Generator
 Pulls startup news, curates it with Gemini (free tier) according to the
 Atlas Editorial Manifesto, and writes the result as JSON for the website
 to render.
@@ -25,7 +25,8 @@ import requests
 # ---------------------------------------------------------------------------
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-MODEL = os.environ.get("FOUNDEROS_MODEL", "gemini-2.5-flash")
+MODEL = os.environ.get("FOUNDEROS_MODEL", "gemini-3-flash")
+# Images via Openverse (openverse.org) — free, no signup, no API key needed.
 
 if not GEMINI_API_KEY:
     raise SystemExit(
@@ -43,7 +44,7 @@ RSS_SOURCES = {
 HN_API = "https://hn.algolia.com/api/v1/search?tags=story&hitsPerPage=15"
 
 MANIFESTO = """
-You are Atlas, the AI Editor-in-Chief of Founder OS, a daily newsletter for
+You are Atlas, the AI Editor-in-Chief of Catalyst, a daily newsletter for
 aspiring founders (audience: MBA students, e.g. Entrepreneurship Club, IIM
 Udaipur).
 
@@ -81,6 +82,13 @@ WORKFLOW:
      Each item also needs a 1-2 sentence summary explaining why it matters
      (not just what happened), a source url, and the company's website
      domain (for logo lookup, e.g. "openai.com").
+   - startup_breakdown: ONE company that best represents today's theme.
+     Include: company name, domain, what it does, why it matters, and one
+     memorable one-sentence lesson for founders.
+   - trend_to_watch: 2-3 short paragraphs explaining the broader shift, no
+     jargon, focused on strategic implications for founders.
+   - editors_note: 2-3 short paragraphs, one thoughtful reflection that ties
+     the whole edition into one coherent story with one memorable idea.
 
 STYLE: Clear, thoughtful, analytical, conversational, concise, confident
 without exaggeration. No buzzwords, no unnecessary adjectives, no
@@ -97,10 +105,11 @@ matching exactly this schema:
 {
   "date": "YYYY-MM-DD",
   "theme": "string",
+  "theme_image_query": "2-4 word visual search phrase for a stock photo that captures the theme (e.g. 'server room data center', 'city skyline finance')",
   "brief": [
-    {"title": "string", "summary": "string", "url": "string", "domain": "string"},
-    {"title": "string", "summary": "string", "url": "string", "domain": "string"},
-    {"title": "string", "summary": "string", "url": "string", "domain": "string"}
+    {"title": "string", "summary": "string", "url": "string", "domain": "string", "image_query": "2-4 word visual search phrase for a relevant stock photo (e.g. 'startup office team', 'robot factory automation')"},
+    {"title": "string", "summary": "string", "url": "string", "domain": "string", "image_query": "string"},
+    {"title": "string", "summary": "string", "url": "string", "domain": "string", "image_query": "string"}
   ],
   "breakdown": {
     "company": "string",
@@ -169,13 +178,10 @@ def curate_edition(stories):
 RAW STORIES COLLECTED TODAY:
 {raw_dump}
 
-Curate today's Founder OS edition following the manifesto exactly. Output
+Curate today's Catalyst edition following the manifesto exactly. Output
 only the JSON object."""
 
-    url = (
-        f"https://generativelanguage.googleapis.com/v1beta/models/"
-        f"{MODEL}:generateContent?key={GEMINI_API_KEY}"
-    )
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent?key={GEMINI_API_KEY}"
 
     response = requests.post(
         url,
@@ -205,6 +211,46 @@ only the JSON object."""
         raise SystemExit(f"Gemini did not return valid JSON: {e}")
 
     edition["date"] = today
+    return edition
+
+
+# ---------------------------------------------------------------------------
+# 3b. FETCH IMAGES (Openverse — free, no API key required)
+# ---------------------------------------------------------------------------
+
+def search_openverse(query):
+    """Return an openly-licensed photo URL for a search query, or None."""
+    if not query:
+        return None
+    try:
+        resp = requests.get(
+            "https://api.openverse.org/v1/images/",
+            params={
+                "q": query,
+                "page_size": 3,
+                "mature": "false",
+                "license_type": "commercial,modification",  # broad, reusable
+            },
+            headers={"User-Agent": "CatalystNewsletterBot/1.0"},
+            timeout=15,
+        )
+        resp.raise_for_status()
+        results = resp.json().get("results", [])
+        for item in results:
+            url = item.get("url")
+            if url and url.lower().split("?")[0].endswith((".jpg", ".jpeg", ".png", ".webp")):
+                return url
+        if results:
+            return results[0].get("url")
+    except Exception as e:
+        print(f"[warn] Openverse search failed for '{query}': {e}")
+    return None
+
+
+def enrich_with_images(edition):
+    edition["theme_image"] = search_openverse(edition.get("theme_image_query"))
+    for item in edition.get("brief", []):
+        item["image"] = search_openverse(item.get("image_query"))
     return edition
 
 
@@ -242,5 +288,7 @@ if __name__ == "__main__":
     stories = collect_stories()
     print(f"Collected {len(stories)} raw stories. Curating with Gemini...")
     edition = curate_edition(stories)
+    print("Fetching relevant images...")
+    edition = enrich_with_images(edition)
     save_edition(edition)
     print("Done.")
