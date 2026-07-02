@@ -52,11 +52,16 @@
   .bd-block:last-child{margin-bottom:0;}
   .bd-block h4{font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase; color:var(--signal-deep); margin-bottom:6px;}
   .bd-block p{font-size:14.5px;}
+  .bd-block p + p{margin-top:8px;}
   .lesson-box{background:#FBF3E2; border-left:3px solid var(--signal); padding:12px 16px; border-radius:4px; font-family:'Fraunces', serif; font-style:italic; font-size:15px;}
   .trend-card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:24px;}
   .trend-text{font-size:15px;}
   .trend-text p{margin-bottom:14px;}
   .trend-text p:last-child{margin-bottom:0;}
+  .lexicon-card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:24px;}
+  .lexicon-head{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:18px; padding-bottom:16px; border-bottom:1px dashed var(--line);}
+  .lexicon-term{font-family:'Fraunces', serif; font-weight:700; font-size:22px;}
+  .lexicon-reading{font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted); white-space:nowrap;}
   .note{background:var(--forest); color:var(--paper); border-radius:12px; padding:28px;}
   .note .section-label{color:var(--signal);}
   .note .section-label svg{stroke:var(--signal);}
@@ -92,6 +97,7 @@ const ICONS = {
   brief: '<path d="M4 6h16M4 12h16M4 18h10"/>',
   breakdown: '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>',
   trend: '<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>',
+  lexicon: '<path d="M4 5.5C4 4.7 4.7 4 5.5 4H12v16H5.5c-.8 0-1.5-.7-1.5-1.5v-13z"/><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H12v16h6.5c.8 0 1.5-.7 1.5-1.5v-13z"/>',
   note: '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>',
   link: '<path d="M7 17L17 7M7 7h10v10"/>'
 };
@@ -122,6 +128,11 @@ function handleLogoError(img, domain, name) {
     img.onerror = null;
     img.src = fallbackAvatar(name);
   }
+}
+
+function paragraphsHtml(text) {
+  if (!text) return '';
+  return text.split(/\n\s*\n/).map(p => `<p>${p.trim()}</p>`).join('');
 }
 
 function render(edition) {
@@ -159,6 +170,20 @@ function render(edition) {
   `;
 
   const trendHtml = `<div class="trend-card"><div class="trend-text">${edition.trend.paragraphs.map(p => `<p>${p}</p>`).join('')}</div></div>`;
+
+  const lex = edition.builder_lexicon;
+  const lexiconHtml = lex ? `
+    <div class="lexicon-card">
+      <div class="lexicon-head">
+        <div class="lexicon-term">${lex.term}</div>
+        ${lex.reading_time ? `<div class="lexicon-reading">${lex.reading_time}</div>` : ''}
+      </div>
+      <div class="bd-block"><h4>Definition</h4>${paragraphsHtml(lex.definition)}</div>
+      <div class="bd-block"><h4>Why It Matters</h4><p>${lex.why_it_matters}</p></div>
+      <div class="bd-block"><h4>Real-World Example</h4><p>${lex.real_world_example}</p></div>
+    </div>
+  ` : '';
+
   const noteHtml = `<div class="note"><div class="section-label">${icon('note')}Editor's Note</div>${edition.editors_note.paragraphs.map(p => `<p>${p}</p>`).join('')}</div>`;
 
   document.getElementById('app').innerHTML = `
@@ -180,6 +205,12 @@ function render(edition) {
         <div class="section-label">${icon('trend')}Trend to Watch</div>
         ${trendHtml}
       </section>
+      ${lex ? `
+      <section>
+        <div class="section-label">${icon('lexicon')}Builder's Lexicon</div>
+        ${lexiconHtml}
+      </section>
+      ` : ''}
       <section style="border-bottom:none;">
         ${noteHtml}
       </section>
