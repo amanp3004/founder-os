@@ -157,7 +157,7 @@ function render(edition) {
   `;
 }
 
-fetch('data/latest.json')
+fetch('data/latest.json', { cache: 'no-store' })
   .then(res => {
     if (!res.ok) throw new Error('No edition found yet');
     return res.json();
