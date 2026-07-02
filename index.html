@@ -49,8 +49,10 @@
   .bd-block h4{font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase; color:var(--signal-deep); margin-bottom:6px;}
   .bd-block p{font-size:14.5px;}
   .lesson-box{background:#FBF3E2; border-left:3px solid var(--signal); padding:12px 16px; border-radius:4px; font-family:'Fraunces', serif; font-style:italic; font-size:15px;}
+  .trend-card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:24px;}
   .trend-text{font-size:15px; max-width:70ch;}
   .trend-text p{margin-bottom:14px;}
+  .trend-text p:last-child{margin-bottom:0;}
   .note{background:var(--forest); color:var(--paper); border-radius:12px; padding:28px;}
   .note .section-label{color:var(--signal);}
   .note .section-label svg{stroke:var(--signal);}
@@ -98,13 +100,18 @@ function logoUrl(domain) {
   return domain ? `https://logo.clearbit.com/${domain}` : '';
 }
 
+function fallbackAvatar(name) {
+  const initials = (name || '?').trim().slice(0, 2).toUpperCase();
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=2C4A3B&color=F6F3EC&size=128&bold=true&font-size=0.4`;
+}
+
 function render(edition) {
   document.getElementById('dateMeta').innerHTML =
     `Daily Edition<br>${new Date(edition.date).toLocaleDateString('en-US', {weekday:'short', month:'short', day:'2-digit', year:'numeric'})}`;
 
   const briefHtml = edition.brief.map(item => `
     <div class="brief-card">
-      <div class="logo-badge"><img src="${logoUrl(item.domain)}" alt="${item.title}" onerror="this.style.display='none'"></div>
+      <div class="logo-badge"><img src="${logoUrl(item.domain)}" alt="${item.title}" onerror="this.onerror=null; this.src='${fallbackAvatar(item.domain)}'"></div>
       <div class="brief-body">
         <h3>${item.title}</h3>
         <p>${item.summary}</p>
@@ -117,7 +124,7 @@ function render(edition) {
   const breakdownHtml = `
     <div class="breakdown-card">
       <div class="breakdown-head">
-        <img src="${logoUrl(bd.domain)}" alt="${bd.company}" onerror="this.style.display='none'">
+        <img src="${logoUrl(bd.domain)}" alt="${bd.company}" onerror="this.onerror=null; this.src='${fallbackAvatar(bd.company)}'">
         <div>
           <h2>${bd.company}</h2>
           <div class="sub">${bd.category || ''}</div>
@@ -129,7 +136,7 @@ function render(edition) {
     </div>
   `;
 
-  const trendHtml = `<div class="trend-text">${edition.trend.paragraphs.map(p => `<p>${p}</p>`).join('')}</div>`;
+  const trendHtml = `<div class="trend-card"><div class="trend-text">${edition.trend.paragraphs.map(p => `<p>${p}</p>`).join('')}</div></div>`;
   const noteHtml = `<div class="note"><div class="section-label">${icon('note')}Editor's Note</div>${edition.editors_note.paragraphs.map(p => `<p>${p}</p>`).join('')}</div>`;
 
   document.getElementById('app').innerHTML = `
