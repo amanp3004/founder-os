@@ -106,7 +106,9 @@ function icon(name, extraClass) {
 }
 
 function logoUrl(domain) {
-  return domain ? `https://logo.clearbit.com/${domain}` : '';
+  // Clearbit's free Logo API was shut down Dec 2025 — go straight to
+  // favicons (via Google's service) as the primary source instead.
+  return faviconUrl(domain);
 }
 
 function faviconUrl(domain) {
@@ -119,14 +121,10 @@ function fallbackAvatar(name) {
 }
 
 function handleLogoError(img, domain, name) {
-  const stage = img.dataset.stage || '1';
-  if (stage === '1' && domain) {
-    img.dataset.stage = '2';
-    img.src = faviconUrl(domain);
-  } else {
-    img.onerror = null;
-    img.src = fallbackAvatar(name);
-  }
+  // favicon failed (or there was no domain) — fall straight to initials,
+  // and make sure THAT can't loop forever either.
+  img.onerror = null;
+  img.src = fallbackAvatar(name);
 }
 
 function render(edition) {
