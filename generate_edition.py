@@ -19,8 +19,23 @@ import re
 import json
 import time
 import datetime
+from zoneinfo import ZoneInfo
 import feedparser
 import requests
+
+IST = ZoneInfo("Asia/Kolkata")
+
+
+def today_ist():
+    """Today's date in IST, as 'YYYY-MM-DD'.
+
+    GitHub Actions runners default to UTC, so 'today' by server clock can
+    roll over up to 5.5 hours before it actually does in India. Anchoring
+    explicitly to IST is what makes the 'one edition per day, content
+    locked until 12am IST' behavior correct regardless of when/how often
+    the workflow runs.
+    """
+    return datetime.datetime.now(IST).date().isoformat()
 
 # ---------------------------------------------------------------------------
 # 1. CONFIG
@@ -201,9 +216,7 @@ def collect_stories(limit_per_source=8):
 # 3. CURATE WITH GEMINI (free tier)
 # ---------------------------------------------------------------------------
 
-def curate_edition(stories):
-    today = datetime.date.today().isoformat()
-
+def curate_edition(stories, today):
     raw_dump = "\n".join(
         f"- [{s['source']}] {s['title']} — {s['summary']} ({s['url']})"
         for s in stories if s["title"]
@@ -341,10 +354,22 @@ def save_edition(edition):
 
 
 if __name__ == "__main__":
+    today = today_ist()
+    existing_path = f"data/{today}.json"
+
+    if os.path.exists(existing_path):
+        print(
+            f"An edition for {today} (IST) already exists at {existing_path}.\n"
+            "Content is locked for the day once generated — skipping regeneration.\n"
+            "A fresh edition will be generated the next time this runs after "
+            "12:00 AM IST."
+        )
+        raise SystemExit(0)
+
     print("Collecting stories...")
     stories = collect_stories()
     print(f"Collected {len(stories)} raw stories. Curating with Gemini...")
-    edition = curate_edition(stories)
+    edition = curate_edition(stories, today)
     print("Fetching relevant images from Pexels...")
     edition = enrich_with_images(edition)
     save_edition(edition)
