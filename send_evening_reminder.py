@@ -14,8 +14,8 @@ import requests
 from push_utils import send_push
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-MODEL = os.environ.get("FOUNDEROS_MODEL", "gemini-3-flash-preview")
-SITE_URL = os.environ.get("SITE_URL", "https://amanp3004.github.io/founder-os/")
+MODEL = os.environ.get("FOUNDEROS_MODEL", "gemini-2.5-flash")
+SITE_URL = os.environ.get("SITE_URL", "https://amanp3004.github.io/catalyst/")
 
 if not GEMINI_API_KEY:
     raise SystemExit("GEMINI_API_KEY environment variable is not set.")
