@@ -13,7 +13,7 @@ import json
 
 from push_utils import send_push
 
-SITE_URL = os.environ.get("SITE_URL", "https://amanp3004.github.io/founder-os/")
+SITE_URL = os.environ.get("SITE_URL", "https://amanp3004.github.io/catalyst/")
 
 
 def load_todays_edition():
