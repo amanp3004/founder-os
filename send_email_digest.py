@@ -23,7 +23,7 @@ from firebase_admin import credentials, firestore
 
 GMAIL_ADDRESS = os.environ.get("GMAIL_ADDRESS")
 GMAIL_APP_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD")
-SITE_URL = os.environ.get("SITE_URL", "https://amanp3004.github.io/founder-os/")
+SITE_URL = os.environ.get("SITE_URL", "https://amanp3004.github.io/catalyst/")
 BATCH_SIZE = 40  # recipients per BCC batch, keeps individual sends well under Gmail's limits
 
 if not GMAIL_ADDRESS or not GMAIL_APP_PASSWORD:
@@ -129,8 +129,12 @@ def send_batch(html_body, subject, bcc_list):
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = GMAIL_ADDRESS
-    msg["To"] = GMAIL_ADDRESS  # send to self, real recipients in BCC
-    msg["Bcc"] = ", ".join(bcc_list)
+    msg["To"] = GMAIL_ADDRESS  # send to self; real recipients passed as SMTP envelope recipients below
+    # Deliberately NOT setting msg["Bcc"] — doing so would embed the header
+    # (and the full recipient list) into the actual message body that gets
+    # delivered, which every recipient could see via "Show Original". BCC
+    # recipients belong only in sendmail()'s envelope list, never in the
+    # message itself.
     msg.attach(MIMEText(html_body, "html"))
 
     context = ssl.create_default_context()
