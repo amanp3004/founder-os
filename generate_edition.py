@@ -58,10 +58,36 @@ if not PEXELS_API_KEY:
     )
 
 RSS_SOURCES = {
+    # Direct tech/startup publishers
     "TechCrunch": "https://techcrunch.com/feed/",
     "YourStory": "https://yourstory.com/feed",
     "Inc42": "https://inc42.com/feed/",
     "Entrackr": "https://entrackr.com/feed",
+    "VentureBeat": "https://venturebeat.com/feed/",
+    "Sifted": "https://sifted.eu/feed",  # European startups (fintech/deeptech/climate)
+
+    # Google News topic/region searches — free, no API key, and a deliberate
+    # counterweight to the tech-publisher feeds above, which skew AI/US
+    # heavy. These target specific geographies and non-AI sectors so the
+    # raw pool actually contains options besides AI before Atlas even starts
+    # choosing.
+    "GoogleNews-IndiaBusiness": (
+        "https://news.google.com/rss/search?q=startup%20OR%20funding%20OR%20"
+        "acquisition%20when:2d&hl=en-IN&gl=IN&ceid=IN:en"
+    ),
+    "GoogleNews-NonAISectors": (
+        "https://news.google.com/rss/search?q=(fintech%20OR%20healthtech%20OR%20"
+        "%22climate%20tech%22%20OR%20biotech%20OR%20agritech%20OR%20"
+        "%22clean%20energy%22)%20startup%20when:2d&hl=en-US&gl=US&ceid=US:en"
+    ),
+    "GoogleNews-Europe": (
+        "https://news.google.com/rss/search?q=startup%20funding%20when:2d"
+        "&hl=en-GB&gl=GB&ceid=GB:en"
+    ),
+    "GoogleNews-SoutheastAsia": (
+        "https://news.google.com/rss/search?q=startup%20funding%20when:2d"
+        "&hl=en-SG&gl=SG&ceid=SG:en"
+    ),
 }
 
 HN_API = "https://hn.algolia.com/api/v1/search?tags=story&hitsPerPage=15"
@@ -83,6 +109,16 @@ EDITORIAL PRINCIPLES:
 - Respect the reader's time. Readable in five minutes. Every sentence earns its place.
 - Quality over quantity. Four exceptional sections beat twenty average ones.
 - Build long-term thinking. Prioritize timeless principles over hype.
+- Diversify relentlessly. Readers lose interest fast if every edition is
+  about the same handful of companies, the same lexicon terms, or the same
+  sector. Across sectors (AI, fintech, healthtech, climate/cleantech,
+  consumer/D2C, B2B SaaS, deep tech/hardware, biotech, edtech, gaming,
+  logistics, spacetech, agritech, and more) and geographies (India, US,
+  Europe, Southeast Asia, and beyond), actively seek variety. AI is
+  currently a huge share of tech news, but do not let that alone justify
+  an all-AI edition — if the raw stories include genuine non-AI options,
+  prefer them for at least some sections. Only lean AI-heavy on a day when
+  the raw pool truly offers nothing else worth covering.
 
 WORKFLOW:
 1. From the raw stories provided, remove duplicates, ignore clickbait, ignore
@@ -107,18 +143,48 @@ WORKFLOW:
      domain (for logo lookup, e.g. "openai.com").
    - startup_breakdown: ONE company that best represents today's theme.
      Include: company name, domain, what it does, why it matters, and one
-     memorable one-sentence lesson for founders.
+     memorable one-sentence lesson for founders. A "RECENTLY FEATURED
+     COMPANIES" list will be provided each run (companies used as the
+     Startup Breakdown in roughly the last 35 days) — treat it as a hard
+     exclusion list. Do not pick any company on it, even if it's genuinely
+     the best fit for today's theme; pick the next-best company instead.
    - trend_to_watch: 2-3 short paragraphs explaining the broader shift, no
      jargon, focused on strategic implications for founders.
-   - builder_lexicon: exactly ONE entrepreneurial/startup concept that best
-     complements today's theme, chosen AFTER the theme is set (e.g. a
+   - builder_lexicon: exactly ONE core business/management concept that
+     best complements today's theme, chosen AFTER the theme is set (e.g. a
      fundraising-themed edition → "SAFE Note", a growth-themed edition →
-     "North Star Metric"). Draw from standard startup/VC/product vocabulary
-     (MVP, Pivot, Product-Market Fit, CAC, LTV, Burn Rate, Runway, Churn,
-     ARR, MRR, TAM, SAM, SOM, GTM, Flywheel, Network Effects, North Star
-     Metric, Moat, Freemium, Blitzscaling, ESOP, SAFE Note, Convertible
-     Note, Cap Table, Seed Round, Series A, Unicorn, Decacorn, or an
-     equally standard term) — never invent a term. Explain it in a way
+     "North Star Metric", an org-design story → "Span of Control"). Do NOT
+     limit this to startup/VC jargon — draw from across ALL of these
+     functions, rotating which function gets featured rather than
+     defaulting to fundraising/growth terms every time:
+       Startup/VC/Product: MVP, Pivot, Product-Market Fit, CAC, LTV, Burn
+         Rate, Runway, Churn, ARR, MRR, TAM, SAM, SOM, GTM, Flywheel,
+         Network Effects, North Star Metric, Moat, Freemium, Blitzscaling,
+         ESOP, SAFE Note, Convertible Note, Cap Table, Seed Round, Series
+         A, Unicorn, Decacorn
+       Strategy: Porter's Five Forces, SWOT Analysis, Blue Ocean Strategy,
+         OKRs, Vertical Integration, Economies of Scale, First-Mover
+         Advantage, Switching Costs, Competitive Advantage
+       Marketing: Sales Funnel, Conversion Rate, Brand Equity, Market
+         Positioning, Market Segmentation, Growth Hacking, Net Promoter
+         Score (NPS), A/B Testing, Customer Retention, Performance
+         Marketing
+       Operations: Supply Chain, Just-In-Time Inventory, Lean
+         Manufacturing, Six Sigma, Bottleneck, Service-Level Agreement
+         (SLA), Vendor Management, Inventory Turnover
+       HR/People: Employee Engagement, Attrition Rate, Talent Acquisition,
+         Org Structure, Span of Control, Performance Management,
+         Onboarding, 360-Degree Feedback
+       Finance: Working Capital, EBITDA, Gross Margin, ROI, Break-Even
+         Point, Valuation, Dilution, Vesting, Liquidation Preference,
+         Pre-Money/Post-Money Valuation, P&L (Profit & Loss), Balance Sheet
+     ...or an equally standard term from any of these functions — never
+     invent a term. A "RECENTLY USED TERMS" list will be provided each run
+     (terms used in roughly the last 35 days) — treat it as a hard
+     exclusion list. If every obviously-relevant listed term has already
+     been used recently, choose another equally standard term not yet
+     used, even if it isn't in the illustrative lists above — these lists
+     are illustrative, not exhaustive. Explain it in a way
      that sharpens business thinking, not just defines it, but keep it
      tight. Total reading time ~15-20 seconds: definition is EXACTLY 1-2
      sentences (roughly 25-40 words, one short paragraph — never multiple
@@ -179,7 +245,55 @@ matching exactly this schema:
 # 2. COLLECT NEWS
 # ---------------------------------------------------------------------------
 
-def collect_stories(limit_per_source=8):
+def load_recent_history(lookback_days=35):
+    """Scan data/*.json for the last `lookback_days` (by IST date) and pull
+    out which Startup Breakdown companies, Builder's Lexicon terms, and
+    themes were already used. These are passed to Gemini as an explicit
+    exclusion list so the same company/term doesn't reappear within the
+    window, and so themes don't cluster around one topic (e.g. AI) purely
+    because that's what a naive re-run would default to.
+    """
+    recent_companies, recent_terms, recent_themes = [], [], []
+
+    if not os.path.isdir("data"):
+        return recent_companies, recent_terms, recent_themes
+
+    cutoff = datetime.datetime.now(IST).date() - datetime.timedelta(days=lookback_days)
+
+    for fname in sorted(os.listdir("data")):
+        m = re.match(r"^(\d{4}-\d{2}-\d{2})\.json$", fname)
+        if not m:
+            continue  # skips latest.json / index.json
+        try:
+            file_date = datetime.date.fromisoformat(m.group(1))
+        except ValueError:
+            continue
+        if file_date < cutoff:
+            continue
+
+        try:
+            with open(os.path.join("data", fname)) as f:
+                past = json.load(f)
+        except Exception as e:
+            print(f"[warn] couldn't read {fname} for history check: {e}")
+            continue
+
+        company = past.get("breakdown", {}).get("company")
+        if company:
+            recent_companies.append(company)
+
+        term = past.get("builder_lexicon", {}).get("term")
+        if term:
+            recent_terms.append(term)
+
+        theme = past.get("theme")
+        if theme:
+            recent_themes.append(theme)
+
+    return recent_companies, recent_terms, recent_themes
+
+
+def collect_stories(limit_per_source=12):
     """Pull recent items from RSS feeds + Hacker News. Returns a flat list."""
     stories = []
 
@@ -222,13 +336,28 @@ def curate_edition(stories, today):
         for s in stories if s["title"]
     )
 
+    recent_companies, recent_terms, recent_themes = load_recent_history()
+
+    history_block = f"""
+RECENTLY FEATURED COMPANIES (Startup Breakdown, last ~35 days — do not repeat):
+{", ".join(recent_companies) if recent_companies else "(none yet)"}
+
+RECENTLY USED TERMS (Builder's Lexicon, last ~35 days — do not repeat):
+{", ".join(recent_terms) if recent_terms else "(none yet)"}
+
+RECENT THEMES (last ~35 days, for context on what's already been covered —
+use to help judge whether today would be piling onto an already-frequent
+topic like AI, not as a hard exclusion list):
+{", ".join(recent_themes) if recent_themes else "(none yet)"}
+"""
+
     user_prompt = f"""Today's date: {today}
 
 RAW STORIES COLLECTED TODAY:
 {raw_dump}
-
-Curate today's Catalyst edition following the manifesto exactly. Output
-only the JSON object."""
+{history_block}
+Curate today's Catalyst edition following the manifesto exactly, respecting
+the exclusion lists above. Output only the JSON object."""
 
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent?key={GEMINI_API_KEY}"
 
