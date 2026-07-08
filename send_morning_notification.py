@@ -12,13 +12,9 @@ import os
 import json
 
 from push_utils import send_push
+from edition_utils import load_todays_edition
 
 SITE_URL = os.environ.get("SITE_URL", "https://amanp3004.github.io/catalyst/")
-
-
-def load_todays_edition():
-    with open("data/latest.json") as f:
-        return json.load(f)
 
 
 if __name__ == "__main__":
